@@ -5,6 +5,8 @@ import { data } from '@/constants/data';
 import type { Metadata } from 'next';
 import { Lato } from 'next/font/google';
 import NextTopLoader from 'nextjs-toploader';
+import { getMessages } from 'next-intl/server';
+import { NextIntlClientProvider } from 'next-intl';
 
 import '../globals.css';
 
@@ -14,23 +16,30 @@ const lato = Lato({
   display: 'swap',
 });
 
-export default async function RootLayout({
-  children,
-}: {
+interface Props {
   children: React.ReactNode;
-}) {
+  params: Promise<{
+    locale: string;
+  }>;
+}
+
+export default async function RootLayout({ children, params }: Props) {
+  const { locale } = await params;
+  const messages = await getMessages();
   const session = await auth();
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${lato.className}`}
       suppressHydrationWarning={true}>
       <body className={'overflow-hidden'}>
         <NextTopLoader showSpinner={false} />
-        <Providers session={session}>
-          <Toaster />
-          {children}
-        </Providers>
+        <NextIntlClientProvider messages={messages} locale={locale}>
+          <Providers session={session}>
+            <Toaster />
+            {children}
+          </Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
